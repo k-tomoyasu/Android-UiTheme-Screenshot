@@ -9,9 +9,7 @@ import com.android.ddmlib.IDevice
 import com.android.ddmlib.NullOutputReceiver
 import com.github.fusuma.uithemescreenshot.image.resizeImage
 import com.github.fusuma.uithemescreenshot.image.saveImage
-import com.github.fusuma.uithemescreenshot.model.ScreenState
-import com.github.fusuma.uithemescreenshot.model.ScreenshotTarget
-import com.github.fusuma.uithemescreenshot.model.UiTheme
+import com.github.fusuma.uithemescreenshot.model.*
 import com.github.fusuma.uithemescreenshot.receiver.UIThemeDetectReceiver
 import com.github.fusuma.uithemescreenshot.theme.ScreenshotTheme
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -20,8 +18,8 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
 import org.jetbrains.android.sdk.AndroidSdkUtils
-import java.awt.image.BufferedImage
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.TimeUnit
@@ -147,7 +145,7 @@ class ScreenshotAction : DumbAwareAction() {
                         }
                     }
 
-                    state.value.onScreenshot?.let { targetUiTheme ->
+                    state.value.onScreenshot?.let {
                         LaunchedEffect(Unit) {
                             state.value = state.value.copy(
                                 deviceNotFoundError = false,
@@ -160,55 +158,72 @@ class ScreenshotAction : DumbAwareAction() {
                                 )
                                 return@LaunchedEffect
                             }
-                            try {
-                                if (state.value.isTakeBothTheme) {
-                                    state.value = state.value.copy(
-                                        lightScreenshot = null,
-                                        darkScreenshot = null,
-                                        processingScreenshotTarget = ScreenshotTarget.BOTH
-                                    )
-                                    takeScreenshots(
-                                        device,
-                                        getCurrentUiTheme(device),
-                                        state
-                                    )
-                                } else {
-                                    val currentUiTheme = getCurrentUiTheme(device)
-                                    when (currentUiTheme) {
-                                        UiTheme.LIGHT -> {
-                                            state.value = state.value.copy(
-                                                lightScreenshot = null,
-                                                processingScreenshotTarget = ScreenshotTarget.LIGHT
-                                            )
-                                            state.value = state.value.copy(
-                                                lightScreenshot = takeScreenshot(device, state.value.resizeScale).toComposeImageBitmap()
-                                            )
-                                        }
-                                        UiTheme.DARK -> {
-                                            state.value = state.value.copy(
-                                                darkScreenshot = null,
-                                                processingScreenshotTarget = ScreenshotTarget.DARK
-                                            )
-                                            state.value = state.value.copy(
-                                                darkScreenshot = takeScreenshot(device, state.value.resizeScale).toComposeImageBitmap()
-                                            )
-                                        }
-                                    }
-                                }
-                            } catch (e: AdbCommandRejectedException) {
+                            val screenshotFlow = if (state.value.isTakeBothTheme) {
                                 state.value = state.value.copy(
-                                    deviceNotFoundError = true
+                                    lightScreenshot = null,
+                                    darkScreenshot = null,
+                                    processingScreenshotTarget = ScreenshotTarget.BOTH
                                 )
-                            } finally {
+                                takeScreenshots(
+                                    device,
+                                    state.value.resizeScale,
+                                    getCurrentUiTheme(device),
+                                )
+                            } else {
+                                val currentUiTheme = getCurrentUiTheme(device)
+                                when (currentUiTheme) {
+                                    UiTheme.LIGHT -> state.value = state.value.copy(
+                                        lightScreenshot = null,
+                                        processingScreenshotTarget = ScreenshotTarget.LIGHT
+                                    )
+                                    UiTheme.DARK -> state.value = state.value.copy(
+                                        darkScreenshot = null,
+                                        processingScreenshotTarget = ScreenshotTarget.DARK
+                                    )
+                                }
+                                takeScreenshot(device, state.value.resizeScale, currentUiTheme, null)
+                            }
+                            screenshotFlow.onEach { screenshot ->
+                                val nextTarget = screenshot.nextTargetTheme
+                                if (state.value.processingScreenshotTarget == ScreenshotTarget.BOTH) {
+                                    changeUiTheme(
+                                        device = device,
+                                        uiTheme = nextTarget ?: screenshot.theme.toggle(),
+                                        sleepTime = if (nextTarget == null)
+                                            0
+                                        else
+                                            sleepTime,
+                                    )
+                                }
+                            }.onCompletion { throwable ->
                                 state.value = state.value.copy(
+                                    deviceNotFoundError = throwable is AdbCommandRejectedException,
                                     onScreenshot = null,
                                     processingScreenshotTarget = null
                                 )
+                                val datetime = LocalDateTime.now().let { datetime ->
+                                    val pattern = DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
+                                    pattern.format(datetime)
+                                }
+                                screenshotTime = datetime
+                            }.collect { screenshot ->
+                                when (screenshot.theme) {
+                                    UiTheme.LIGHT -> state.value = state.value.copy(
+                                        lightScreenshot = screenshot.image
+                                    )
+                                    UiTheme.DARK -> state.value = state.value.copy(
+                                        darkScreenshot = screenshot.image
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
+        }
+
+        private suspend fun refreshPreScreenshot(device: IDevice, isTakeBoth: Boolean) {
+
         }
 
         private suspend fun getCurrentUiTheme(device: IDevice) : UiTheme {
@@ -223,60 +238,43 @@ class ScreenshotAction : DumbAwareAction() {
                 requireNotNull(receiver.currentUiTheme())
             }
         }
-        private suspend fun takeScreenshots(
+
+        private fun takeScreenshots(
             device: IDevice,
+            scale: Float,
             currentUIMode: UiTheme,
-            uiState: MutableState<ScreenState>,
-        ) {
-            val scale = uiState.value.resizeScale
-            when (currentUIMode) {
+        ): Flow<ScreenshotResult> {
+            val targetThemes = when (currentUIMode) {
                 UiTheme.LIGHT -> {
-                    val light = takeScreenshot(device, scale).toComposeImageBitmap()
-                    uiState.value = uiState.value.copy(
-                        lightScreenshot = light
-                    )
-                    changeUiTheme(device, UiTheme.DARK, sleepTime)
-                    val dark = takeScreenshot(device, scale).toComposeImageBitmap()
-                    uiState.value = uiState.value.copy(
-                        darkScreenshot = dark
-                    )
-                    changeUiTheme(device, UiTheme.LIGHT, 0)
+                    UiTheme.LIGHT to UiTheme.DARK
                 }
                 UiTheme.DARK -> {
-                    val dark = takeScreenshot(device, scale).toComposeImageBitmap()
-                    uiState.value = uiState.value.copy(
-                        darkScreenshot = dark
-                    )
-                    changeUiTheme(device, UiTheme.LIGHT, sleepTime)
-                    val light = takeScreenshot(device, scale).toComposeImageBitmap()
-                    uiState.value = uiState.value.copy(
-                        lightScreenshot = light
-                    )
-                    changeUiTheme(device, UiTheme.DARK, 0)
+                    UiTheme.DARK to UiTheme.LIGHT
                 }
             }
-            val datetime = LocalDateTime.now().let { datetime ->
-                val pattern = DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
-                pattern.format(datetime)
-            }
-            screenshotTime = datetime
+            return flowOf(
+                takeScreenshot(device, scale, targetThemes.first, targetThemes.first.toggle()),
+                takeScreenshot(device, scale, targetThemes.second, null),
+            ).flattenConcat()
         }
+
+        private fun takeScreenshot(device: IDevice, scale: Float, theme: UiTheme, nextTargetTheme: UiTheme?) : Flow<ScreenshotResult> = flow {
+            val screenshot = device.getScreenshot(
+                10,
+                TimeUnit.SECONDS
+            ).asBufferedImage()
+            emit(
+                ScreenshotResult(
+                    theme,
+                    resizeImage(screenshot, scale).toComposeImageBitmap(),
+                    nextTargetTheme
+                )
+            )
+        }.flowOn(Dispatchers.IO)
 
         private fun getDevice(index: Int) = bridge?.devices?.getOrNull(index)
 
         private fun getConnectedDeviceNames() = bridge?.devices?.map { it.name }.orEmpty().toImmutableList()
-        private suspend fun takeScreenshot(device: IDevice, scale: Float) : BufferedImage {
-            return withContext(Dispatchers.IO) {
-                val screenshot = device.getScreenshot(
-                    10,
-                    TimeUnit.SECONDS
-                )
-                resizeImage(
-                    screenshot.asBufferedImage(),
-                    scale
-                )
-            }
-        }
 
         private suspend fun changeUiTheme(device: IDevice, uiTheme: UiTheme, sleepTime: Long) {
             withContext(Dispatchers.IO) {

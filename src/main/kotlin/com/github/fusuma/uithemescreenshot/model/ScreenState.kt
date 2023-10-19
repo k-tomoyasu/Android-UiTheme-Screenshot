@@ -17,8 +17,8 @@ data class ScreenState(
     val deviceNotFoundError: Boolean = false,
 ) {
     private val isScreenshotProcessing = onScreenshot != null
-    val isLightScreenshotProcessing = isScreenshotProcessing && (processingScreenshotTarget.isTarget(ScreenshotTarget.LIGHT))
-    val isDarkScreenshotProcessing = isScreenshotProcessing && (processingScreenshotTarget.isTarget(ScreenshotTarget.DARK))
+    val isLightScreenshotProcessing = isScreenshotProcessing && processingScreenshotTarget.isTarget(ScreenshotTarget.LIGHT)
+    val isDarkScreenshotProcessing = isScreenshotProcessing && processingScreenshotTarget.isTarget(ScreenshotTarget.DARK)
     private val isToggleThemeProcessing = onToggleTheme != null
     private val isInvalidResizeScale = resizeScale <= 0f
     private val deviceExists = deviceNameList.isNotEmpty()
@@ -29,9 +29,6 @@ data class ScreenState(
     val deviceListSelectable = !isScreenshotProcessing && !isToggleThemeProcessing
 }
 
-enum class ScreenshotTarget {
-    LIGHT, DARK, BOTH;
-}
 private fun ScreenshotTarget?.isTarget(target: ScreenshotTarget) = when (this) {
     ScreenshotTarget.LIGHT -> target == ScreenshotTarget.LIGHT
     ScreenshotTarget.DARK -> target == ScreenshotTarget.DARK
