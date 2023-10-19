@@ -2,16 +2,15 @@ package com.github.fusuma.uithemescreenshot
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.OutlinedButton
 import androidx.compose.material.Surface
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.unit.dp
-import com.github.fusuma.uithemescreenshot.component.DeviceList
-import com.github.fusuma.uithemescreenshot.component.ScaleSlider
-import com.github.fusuma.uithemescreenshot.component.ScreenshotContainerRow
-import com.github.fusuma.uithemescreenshot.component.TakeScreenshotButton
+import com.github.fusuma.uithemescreenshot.component.*
 import com.github.fusuma.uithemescreenshot.model.ScreenState
 import com.github.fusuma.uithemescreenshot.model.UiTheme
 import com.github.fusuma.uithemescreenshot.theme.ScreenshotTheme
@@ -23,6 +22,8 @@ fun TakeScreenshotScreen(
     onResizeScaleChange: (Float) -> Unit,
     onSelectDevice: (Int) -> Unit,
     onClickRefreshDeviceList: () -> Unit,
+    onCheckTakeBothTheme: (Boolean) -> Unit,
+    onToggleTheme: () -> Unit,
     onClickTakeScreenshot: () -> Unit
 ) {
     Surface(
@@ -48,11 +49,26 @@ fun TakeScreenshotScreen(
                 onValueChange = onResizeScaleChange
             )
             Spacer(Modifier.height(10.dp))
-            TakeScreenshotButton(
+            Row {
+                OutlinedButton(
+                    onClick = onToggleTheme,
+                    enabled = !state.isScreenshotProcessing && !state.isToggleThemeProcessing
+                ) {
+                    Text("Toggle Theme")
+                }
+                Spacer(Modifier.width(10.dp))
+                TakeScreenshotButton(
+                    isProcessingScreenshot = state.isScreenshotProcessing,
+                    isToggleThemeProcessing = state.isToggleThemeProcessing,
+                    isInvalidResizeScale = state.isInvalidResizeScale,
+                    deviceExists = state.deviceExists,
+                    onClick = onClickTakeScreenshot,
+                )
+            }
+            TargetBothThemeCheckbox(
+                isTakeBothTheme = state.isTakeBothTheme,
                 isProcessingScreenshot = state.isScreenshotProcessing,
-                isInvalidResizeScale = state.isInvalidResizeScale,
-                deviceExists = state.deviceExists,
-                onClick = onClickTakeScreenshot
+                onCheck = onCheckTakeBothTheme,
             )
             Spacer(Modifier.height(10.dp))
             ScreenshotContainerRow(
@@ -69,16 +85,16 @@ fun TakeScreenshotScreen(
 @Preview
 @Composable
 fun ScreenPreview() {
-    ScreenshotTheme {
-        TakeScreenshotScreen(
-            ScreenState(
-                deviceNameList = listOf("emulator1", "emulator2")
-            ),
-            { _, _ -> },
-            {},
-            {},
-            {},
-            {},
-        )
-    }
+    TakeScreenshotScreen(
+        ScreenState(
+            deviceNameList = listOf("emulator1", "emulator2")
+        ),
+        { _, _ -> },
+        {},
+        {},
+        {},
+        {},
+        {},
+        {},
+    )
 }

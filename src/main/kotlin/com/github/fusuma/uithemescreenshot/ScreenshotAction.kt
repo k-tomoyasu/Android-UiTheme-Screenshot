@@ -10,6 +10,7 @@ import com.android.ddmlib.NullOutputReceiver
 import com.github.fusuma.uithemescreenshot.image.resizeImage
 import com.github.fusuma.uithemescreenshot.image.saveImage
 import com.github.fusuma.uithemescreenshot.model.ScreenState
+import com.github.fusuma.uithemescreenshot.model.ScreenshotTarget
 import com.github.fusuma.uithemescreenshot.model.UiTheme
 import com.github.fusuma.uithemescreenshot.receiver.UIThemeDetectReceiver
 import com.github.fusuma.uithemescreenshot.theme.ScreenshotTheme
@@ -30,8 +31,7 @@ private const val sleepTime = 3000L
 class ScreenshotAction : DumbAwareAction() {
     override fun actionPerformed(e: AnActionEvent) {
         e.project?.let {
-            ScreenshotDialog(it)
-                .show()
+            ScreenshotDialog(it).show()
         }
     }
 
@@ -39,7 +39,7 @@ class ScreenshotAction : DumbAwareAction() {
         private val bridge get() = AndroidSdkUtils.getDebugBridge(project)
 
         private var screenshotTime = ""
-        override fun createActions() = arrayOf(getCancelAction())
+        override fun createActions() = arrayOf(cancelAction)
 
         init {
             title = "UiTheme Screenshot"
@@ -52,7 +52,13 @@ class ScreenshotAction : DumbAwareAction() {
                 setContent {
                     val state = remember { mutableStateOf(ScreenState()) }
                     val selectedDevice = remember(state.value.selectedIndex) {
-                        getDevice(state.value.selectedIndex)
+                        val device = getDevice(state.value.selectedIndex)
+                        if (device == null) {
+                            state.value = state.value.copy(
+                                deviceNotFoundError = Unit
+                            )
+                        }
+                        device
                     }
 
                     LaunchedEffect(Unit) {
@@ -90,6 +96,16 @@ class ScreenshotAction : DumbAwareAction() {
                                     uiTheme,
                                     screenshotTime
                                 )
+                            },
+                            onCheckTakeBothTheme = { checked ->
+                                state.value = state.value.copy(
+                                    isTakeBothTheme = checked
+                                )
+                            },
+                            onToggleTheme = {
+                                state.value = state.value.copy(
+                                    onToggleTheme = Unit
+                                )
                             }
                         )
                     }
@@ -106,12 +122,34 @@ class ScreenshotAction : DumbAwareAction() {
                         }
                     }
 
-                    state.value.onScreenshot?.let {
+                    state.value.onToggleTheme?.let {
                         LaunchedEffect(Unit) {
                             state.value = state.value.copy(
                                 deviceNotFoundError = null,
-                                lightScreenshot = null,
-                                darkScreenshot = null
+                            )
+                            selectedDevice?.let {
+                                try {
+                                    changeUiTheme(
+                                        it,
+                                        getCurrentUiTheme(it).toggle(),
+                                        0
+                                    )
+                                } catch (e: AdbCommandRejectedException) {
+                                    state.value = state.value.copy(
+                                        deviceNotFoundError = Unit
+                                    )
+                                }
+                            }
+                            state.value = state.value.copy(
+                                onToggleTheme = null
+                            )
+                        }
+                    }
+
+                    state.value.onScreenshot?.let { targetUiTheme ->
+                        LaunchedEffect(Unit) {
+                            state.value = state.value.copy(
+                                deviceNotFoundError = null,
                             )
                             val device = getDevice(state.value.selectedIndex)
                             if (device == null || device.serialNumber != selectedDevice?.serialNumber) {
@@ -122,19 +160,48 @@ class ScreenshotAction : DumbAwareAction() {
                                 return@LaunchedEffect
                             }
                             try {
-                                val currentUiTheme = getCurrentUiTheme(device)
-                                takeScreenshots(
-                                    device,
-                                    currentUiTheme,
-                                    state
-                                )
+                                if (state.value.isTakeBothTheme) {
+                                    state.value = state.value.copy(
+                                        lightScreenshot = null,
+                                        darkScreenshot = null,
+                                        processingScreenshotTarget = ScreenshotTarget.BOTH
+                                    )
+                                    takeScreenshots(
+                                        device,
+                                        getCurrentUiTheme(device),
+                                        state
+                                    )
+                                } else {
+                                    val currentUiTheme = getCurrentUiTheme(device)
+                                    when (currentUiTheme) {
+                                        UiTheme.LIGHT -> {
+                                            state.value = state.value.copy(
+                                                lightScreenshot = null,
+                                                processingScreenshotTarget = ScreenshotTarget.LIGHT
+                                            )
+                                            state.value = state.value.copy(
+                                                lightScreenshot = takeScreenshot(device, state.value.resizeScale).toComposeImageBitmap()
+                                            )
+                                        }
+                                        UiTheme.DARK -> {
+                                            state.value = state.value.copy(
+                                                darkScreenshot = null,
+                                                processingScreenshotTarget = ScreenshotTarget.DARK
+                                            )
+                                            state.value = state.value.copy(
+                                                darkScreenshot = takeScreenshot(device, state.value.resizeScale).toComposeImageBitmap()
+                                            )
+                                        }
+                                    }
+                                }
                             } catch (e: AdbCommandRejectedException) {
                                 state.value = state.value.copy(
                                     deviceNotFoundError = Unit
                                 )
                             } finally {
                                 state.value = state.value.copy(
-                                    onScreenshot = null
+                                    onScreenshot = null,
+                                    processingScreenshotTarget = null
                                 )
                             }
                         }

@@ -1,26 +1,41 @@
 package com.github.fusuma.uithemescreenshot.component
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Button
+import androidx.compose.material.Checkbox
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.github.fusuma.uithemescreenshot.theme.ScreenshotTheme
 
 @Composable
 fun TakeScreenshotButton(
     modifier: Modifier = Modifier,
     isProcessingScreenshot: Boolean,
+    isToggleThemeProcessing: Boolean,
     isInvalidResizeScale: Boolean,
     deviceExists: Boolean,
     onClick: () -> Unit,
 ) {
-    Button(
-        modifier = modifier,
-        onClick = onClick,
-        enabled = (!isProcessingScreenshot && !isInvalidResizeScale && deviceExists)
+    Row(
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text("Take Screenshot")
+        Button(
+            modifier = modifier,
+            onClick = onClick,
+            enabled = (!isProcessingScreenshot && !isToggleThemeProcessing && !isInvalidResizeScale && deviceExists)
+        ) {
+            Text("Take Screenshot")
+        }
     }
+}
+
+@Preview
+@Composable
+fun TakeScreenshotButtonPreview() {
+    Text("aa")
 }

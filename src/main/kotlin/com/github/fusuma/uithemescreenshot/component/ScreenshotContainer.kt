@@ -32,22 +32,21 @@ fun ScreenshotContainer(
             CircularProgressIndicator()
         }
         screenshot?.let { image ->
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
+            Image(
+                bitmap = image,
+                contentDescription = null
+            )
+            OutlinedButton(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(end = 8.dp)
+                ,
+                onClick = {
+                    onSave(image)
+                },
+                border = BorderStroke(1.dp,  MaterialTheme.colors.primary)
             ) {
-                OutlinedButton(
-                    onClick = {
-                        onSave(image)
-                    },
-                    border = BorderStroke(1.dp,  MaterialTheme.colors.primary)
-                ) {
-                    Text("Save")
-                }
-                Spacer(Modifier.height(8.dp))
-                Image(
-                    bitmap = image,
-                    contentDescription = null
-                )
+                Text("Save")
             }
         }
     }
