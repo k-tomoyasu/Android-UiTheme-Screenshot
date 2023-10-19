@@ -35,7 +35,7 @@ class ScreenshotAction : DumbAwareAction() {
         }
     }
 
-    class ScreenshotDialog(private val project: Project) : DialogWrapper(project) {
+    class ScreenshotDialog(private val project: Project) : DialogWrapper(project, false, IdeModalityType.MODELESS) {
         private val bridge get() = AndroidSdkUtils.getDebugBridge(project)
 
         private var screenshotTime = ""
