@@ -217,6 +217,8 @@ class ScreenshotAction : DumbAwareAction() {
                 device.executeShellCommand(
                     "cmd uimode night",
                     receiver,
+                    10L,
+                    TimeUnit.SECONDS
                 )
                 requireNotNull(receiver.currentUiTheme())
             }
