@@ -1,5 +1,5 @@
 # Android-UiTheme-Screenshot
-Android Studio and Intellij IDEA plugin developed by compose-multiplatform.  
+Android Studio and Intellij IDEA plugin developed using compose-multiplatform.  
 
 Easily capture screenshots from your connected Android device using adb. You can obtain both dark mode and light mode screenshots in one go.
 ## Features
