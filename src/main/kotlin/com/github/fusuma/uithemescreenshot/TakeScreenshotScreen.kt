@@ -37,7 +37,7 @@ fun TakeScreenshotScreen(
         ) {
             DeviceList(
                 deviceNameList = state.deviceNameList,
-                deviceNotFoundError = state.deviceNotFoundError != null,
+                deviceNotFoundError = state.deviceNotFoundError,
                 selectedIndex = state.selectedIndex,
                 onSelect = onSelectDevice,
                 onRefresh = onClickRefreshDeviceList
@@ -45,29 +45,24 @@ fun TakeScreenshotScreen(
             Spacer(Modifier.height(10.dp))
             ScaleSlider(
                 scale = state.resizeScale,
-                isProcessingScreenshot = state.isScreenshotProcessing,
+                enabled = state.scaleSliderEnabled,
                 onValueChange = onResizeScaleChange
             )
             Spacer(Modifier.height(10.dp))
             Row {
-                OutlinedButton(
+                ToggleUiThemeButton(
+                    enabled = state.toggleButtonEnabled,
                     onClick = onToggleTheme,
-                    enabled = !state.isScreenshotProcessing && !state.isToggleThemeProcessing
-                ) {
-                    Text("Toggle Theme")
-                }
+                )
                 Spacer(Modifier.width(10.dp))
                 TakeScreenshotButton(
-                    isProcessingScreenshot = state.isScreenshotProcessing,
-                    isToggleThemeProcessing = state.isToggleThemeProcessing,
-                    isInvalidResizeScale = state.isInvalidResizeScale,
-                    deviceExists = state.deviceExists,
+                    enabled = state.screenshotButtonEnabled,
                     onClick = onClickTakeScreenshot,
                 )
             }
             TargetBothThemeCheckbox(
+                enabled = state.targetCheckboxEnabled,
                 isTakeBothTheme = state.isTakeBothTheme,
-                isProcessingScreenshot = state.isScreenshotProcessing,
                 onCheck = onCheckTakeBothTheme,
             )
             Spacer(Modifier.height(10.dp))

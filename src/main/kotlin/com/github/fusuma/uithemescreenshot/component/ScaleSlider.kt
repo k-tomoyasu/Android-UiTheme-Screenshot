@@ -20,7 +20,7 @@ import com.github.fusuma.uithemescreenshot.theme.ScreenshotTheme
 fun ScaleSlider(
     modifier: Modifier = Modifier,
     scale: Float,
-    isProcessingScreenshot: Boolean,
+    enabled: Boolean,
     onValueChange: (Float) -> Unit
 ) {
     var position by remember { mutableFloatStateOf(scale) }
@@ -35,7 +35,7 @@ fun ScaleSlider(
     Slider(
         modifier = modifier.padding(horizontal = 60.dp),
         value = position,
-        enabled = !isProcessingScreenshot,
+        enabled = enabled,
         onValueChange = { position = it },
         valueRange = 0.2f..1f,
         onValueChangeFinished = {
@@ -50,7 +50,7 @@ private fun ScaleSliderPreview() {
     ScreenshotTheme {
         ScaleSlider(
             scale = 0.6f,
-            isProcessingScreenshot = false,
+            enabled = true,
             onValueChange = {}
         )
     }

@@ -11,8 +11,8 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun TargetBothThemeCheckbox(
+    enabled: Boolean,
     isTakeBothTheme: Boolean,
-    isProcessingScreenshot: Boolean,
     onCheck: (Boolean) -> Unit,
 ) {
     Row(
@@ -25,7 +25,7 @@ fun TargetBothThemeCheckbox(
         Checkbox(
             checked = isTakeBothTheme,
             onCheckedChange = onCheck,
-            enabled = !isProcessingScreenshot
+            enabled = enabled
         )
     }
 }

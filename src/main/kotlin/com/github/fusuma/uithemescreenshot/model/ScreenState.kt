@@ -14,14 +14,18 @@ data class ScreenState(
     val onScreenshot: Unit? = null,
     val processingScreenshotTarget: ScreenshotTarget? = null,
     val onToggleTheme: Unit? = null,
-    val deviceNotFoundError: Unit? = null,
+    val deviceNotFoundError: Boolean = false,
 ) {
-    val isScreenshotProcessing = onScreenshot != null
+    private val isScreenshotProcessing = onScreenshot != null
     val isLightScreenshotProcessing = isScreenshotProcessing && (processingScreenshotTarget.isTarget(ScreenshotTarget.LIGHT))
     val isDarkScreenshotProcessing = isScreenshotProcessing && (processingScreenshotTarget.isTarget(ScreenshotTarget.DARK))
-    val isToggleThemeProcessing = onToggleTheme != null
-    val isInvalidResizeScale = resizeScale <= 0f
-    val deviceExists = deviceNameList.isNotEmpty()
+    private val isToggleThemeProcessing = onToggleTheme != null
+    private val isInvalidResizeScale = resizeScale <= 0f
+    private val deviceExists = deviceNameList.isNotEmpty()
+    val scaleSliderEnabled = !isScreenshotProcessing
+    val screenshotButtonEnabled = !isScreenshotProcessing && !isToggleThemeProcessing && !isInvalidResizeScale && deviceExists
+    val toggleButtonEnabled = !isScreenshotProcessing && !isToggleThemeProcessing && deviceExists
+    val targetCheckboxEnabled = !isScreenshotProcessing
 }
 
 enum class ScreenshotTarget {

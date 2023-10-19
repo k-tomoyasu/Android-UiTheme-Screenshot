@@ -15,10 +15,7 @@ import com.github.fusuma.uithemescreenshot.theme.ScreenshotTheme
 @Composable
 fun TakeScreenshotButton(
     modifier: Modifier = Modifier,
-    isProcessingScreenshot: Boolean,
-    isToggleThemeProcessing: Boolean,
-    isInvalidResizeScale: Boolean,
-    deviceExists: Boolean,
+    enabled: Boolean,
     onClick: () -> Unit,
 ) {
     Row(
@@ -27,7 +24,7 @@ fun TakeScreenshotButton(
         Button(
             modifier = modifier,
             onClick = onClick,
-            enabled = (!isProcessingScreenshot && !isToggleThemeProcessing && !isInvalidResizeScale && deviceExists)
+            enabled = enabled,
         ) {
             Text("Take Screenshot")
         }

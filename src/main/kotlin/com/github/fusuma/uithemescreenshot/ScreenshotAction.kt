@@ -55,7 +55,7 @@ class ScreenshotAction : DumbAwareAction() {
                         val device = getDevice(state.value.selectedIndex)
                         if (device == null) {
                             state.value = state.value.copy(
-                                deviceNotFoundError = Unit
+                                deviceNotFoundError = true
                             )
                         }
                         device
@@ -115,7 +115,7 @@ class ScreenshotAction : DumbAwareAction() {
                         LaunchedEffect(Unit) {
                             state.value = state.value.copy(
                                 deviceNameList = getConnectedDeviceNames(),
-                                deviceNotFoundError = null,
+                                deviceNotFoundError = false,
                             )
                             state.value = state.value.copy(
                                 onRefreshDevice = null
@@ -126,7 +126,7 @@ class ScreenshotAction : DumbAwareAction() {
                     state.value.onToggleTheme?.let {
                         LaunchedEffect(Unit) {
                             state.value = state.value.copy(
-                                deviceNotFoundError = null,
+                                deviceNotFoundError = false,
                             )
                             selectedDevice?.let {
                                 try {
@@ -137,7 +137,7 @@ class ScreenshotAction : DumbAwareAction() {
                                     )
                                 } catch (e: AdbCommandRejectedException) {
                                     state.value = state.value.copy(
-                                        deviceNotFoundError = Unit
+                                        deviceNotFoundError = true
                                     )
                                 }
                             }
@@ -150,12 +150,12 @@ class ScreenshotAction : DumbAwareAction() {
                     state.value.onScreenshot?.let { targetUiTheme ->
                         LaunchedEffect(Unit) {
                             state.value = state.value.copy(
-                                deviceNotFoundError = null,
+                                deviceNotFoundError = false,
                             )
                             val device = getDevice(state.value.selectedIndex)
                             if (device == null || device.serialNumber != selectedDevice?.serialNumber) {
                                 state.value = state.value.copy(
-                                    deviceNotFoundError = Unit,
+                                    deviceNotFoundError = true,
                                     onScreenshot = null,
                                 )
                                 return@LaunchedEffect
@@ -197,7 +197,7 @@ class ScreenshotAction : DumbAwareAction() {
                                 }
                             } catch (e: AdbCommandRejectedException) {
                                 state.value = state.value.copy(
-                                    deviceNotFoundError = Unit
+                                    deviceNotFoundError = true
                                 )
                             } finally {
                                 state.value = state.value.copy(
