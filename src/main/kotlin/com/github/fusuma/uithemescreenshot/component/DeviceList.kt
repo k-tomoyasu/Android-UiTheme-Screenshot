@@ -17,10 +17,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.github.fusuma.uithemescreenshot.ifTrue
 
 @Composable
 fun DeviceList(
     modifier: Modifier = Modifier,
+    enabled: Boolean,
     deviceNameList: List<String>,
     deviceNotFoundError: Boolean,
     selectedIndex: Int,
@@ -59,6 +61,7 @@ fun DeviceList(
         )
     } else {
         DeviceNameSelection(
+            enabled = enabled,
             deviceNameList = deviceNameList,
             selectedIndex = selectedIndex,
             onSelect = onSelect
@@ -67,19 +70,24 @@ fun DeviceList(
 }
 @Composable
 private fun DeviceNameSelection(
+    enabled: Boolean,
     deviceNameList: List<String>,
     selectedIndex: Int,
     onSelect: (Int) -> Unit
 ) {
     deviceNameList.forEachIndexed { i, deviceName ->
         Row(
-            Modifier.selectable(
-                selected = i == selectedIndex,
-                onClick = { onSelect(i) }
-            ),
+            Modifier
+                .ifTrue(enabled) {
+                    Modifier.selectable(
+                        selected = i == selectedIndex,
+                        onClick = { onSelect(i) }
+                    )
+                },
             verticalAlignment = Alignment.CenterVertically
         ) {
             RadioButton(
+                enabled = enabled,
                 selected = i == selectedIndex,
                 onClick = { onSelect(i) }
             )

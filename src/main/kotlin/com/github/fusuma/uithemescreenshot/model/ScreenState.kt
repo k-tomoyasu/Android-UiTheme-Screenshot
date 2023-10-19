@@ -26,6 +26,7 @@ data class ScreenState(
     val screenshotButtonEnabled = !isScreenshotProcessing && !isToggleThemeProcessing && !isInvalidResizeScale && deviceExists
     val toggleButtonEnabled = !isScreenshotProcessing && !isToggleThemeProcessing && deviceExists
     val targetCheckboxEnabled = !isScreenshotProcessing
+    val deviceListSelectable = !isScreenshotProcessing && !isToggleThemeProcessing
 }
 
 enum class ScreenshotTarget {

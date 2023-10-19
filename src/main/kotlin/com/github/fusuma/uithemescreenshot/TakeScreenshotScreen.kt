@@ -36,6 +36,7 @@ fun TakeScreenshotScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             DeviceList(
+                enabled = state.deviceListSelectable,
                 deviceNameList = state.deviceNameList,
                 deviceNotFoundError = state.deviceNotFoundError,
                 selectedIndex = state.selectedIndex,
