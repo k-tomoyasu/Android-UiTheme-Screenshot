@@ -1,14 +1,19 @@
 package com.github.fusuma.uithemescreenshot.image
 
+import com.android.SdkConstants.EXT_PNG
 import com.github.fusuma.uithemescreenshot.model.UiTheme
+import com.intellij.openapi.fileChooser.FileChooserFactory
+import com.intellij.openapi.fileChooser.FileSaverDescriptor
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.Messages
 import com.intellij.util.ui.ImageUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.awt.image.BufferedImage
 import java.io.File
+import java.nio.file.Path
 import javax.imageio.ImageIO
-import javax.swing.JFileChooser
-import javax.swing.filechooser.FileNameExtensionFilter
+
 
 suspend fun resizeImage(image: BufferedImage, scale: Float): BufferedImage {
     if (scale == 0f) return image
@@ -26,23 +31,20 @@ suspend fun resizeImage(image: BufferedImage, scale: Float): BufferedImage {
     }
 }
 
-fun saveImage(image: BufferedImage, UiTheme: UiTheme, screenshotTime: String) {
-    val fileChooser = JFileChooser().apply {
-        currentDirectory = File(System.getProperty("user.home") + File.separator + "Desktop")
-        addChoosableFileFilter(FileNameExtensionFilter("PNG", "png"))
-
-        val fileName = "screenshot_${screenshotTime}_${UiTheme.name.lowercase()}.png"
-        setSelectedFile(File(fileName))
-    }
-    val result = fileChooser.showSaveDialog(null)
-
-    if (result == JFileChooser.APPROVE_OPTION) {
-        val selectedFile = fileChooser.selectedFile
-
-        try {
-            ImageIO.write(image, "png", selectedFile)
-        } catch (e: Exception) {
-            e.printStackTrace()
+fun saveImage(image: BufferedImage, UiTheme: UiTheme, screenshotTime: String, project: Project) {
+    val descriptor = FileSaverDescriptor("Save Screenshot", "", EXT_PNG)
+    val saveFileDialog = FileChooserFactory.getInstance().createSaveFileDialog(descriptor, project)
+    val fileName = "screenshot_${screenshotTime}_${UiTheme.name.lowercase()}.png"
+    val fileWrapper = saveFileDialog.save(
+        Path.of(System.getProperty("user.home") + File.separator + "Desktop"),
+        fileName
+    )
+    try {
+        fileWrapper?.file?.let {
+            ImageIO.write(image, "png", it)
         }
+    } catch (e: Exception) {
+        Messages.showErrorDialog(project, "Save failed.", "Save Screenshot")
+        e.printStackTrace()
     }
 }

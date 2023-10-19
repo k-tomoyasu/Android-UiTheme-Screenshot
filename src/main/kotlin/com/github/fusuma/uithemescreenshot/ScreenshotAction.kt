@@ -94,7 +94,8 @@ class ScreenshotAction : DumbAwareAction() {
                                 saveImage(
                                     imageBitmap.toAwtImage(),
                                     uiTheme,
-                                    screenshotTime
+                                    screenshotTime,
+                                    project
                                 )
                             },
                             onCheckTakeBothTheme = { checked ->
