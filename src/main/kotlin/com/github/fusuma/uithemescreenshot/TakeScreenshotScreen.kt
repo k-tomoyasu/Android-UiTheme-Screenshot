@@ -14,6 +14,7 @@ import com.github.fusuma.uithemescreenshot.component.*
 import com.github.fusuma.uithemescreenshot.model.ScreenState
 import com.github.fusuma.uithemescreenshot.model.UiTheme
 import com.github.fusuma.uithemescreenshot.theme.ScreenshotTheme
+import com.github.fusuma.uithemescreenshot.theme.ScreenshotThemePreview
 
 @Composable
 fun TakeScreenshotScreen(
@@ -81,16 +82,18 @@ fun TakeScreenshotScreen(
 @Preview
 @Composable
 fun ScreenPreview() {
-    TakeScreenshotScreen(
-        ScreenState(
-            deviceNameList = listOf("emulator1", "emulator2")
-        ),
-        { _, _ -> },
-        {},
-        {},
-        {},
-        {},
-        {},
-        {},
-    )
+    ScreenshotThemePreview {
+        TakeScreenshotScreen(
+            ScreenState(
+                deviceNameList = listOf("emulator1", "emulator2")
+            ),
+            { _, _ -> },
+            {},
+            {},
+            {},
+            {},
+            {},
+            {},
+        )
+    }
 }
