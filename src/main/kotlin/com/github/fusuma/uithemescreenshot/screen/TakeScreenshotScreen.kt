@@ -1,10 +1,8 @@
-package com.github.fusuma.uithemescreenshot
+package com.github.fusuma.uithemescreenshot.screen
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.OutlinedButton
 import androidx.compose.material.Surface
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -13,7 +11,6 @@ import androidx.compose.ui.unit.dp
 import com.github.fusuma.uithemescreenshot.component.*
 import com.github.fusuma.uithemescreenshot.model.ScreenState
 import com.github.fusuma.uithemescreenshot.model.UiTheme
-import com.github.fusuma.uithemescreenshot.theme.ScreenshotTheme
 import com.github.fusuma.uithemescreenshot.theme.ScreenshotThemePreview
 
 @Composable
