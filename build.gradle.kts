@@ -1,5 +1,4 @@
 plugins {
-    id("java")
     id("org.jetbrains.kotlin.jvm") version "1.9.0"
     id("org.jetbrains.intellij") version "1.15.0"
     id("org.jetbrains.compose") version "1.5.3"
@@ -10,12 +9,11 @@ version = "1.1.0"
 
 repositories {
     mavenCentral()
-    google()
-    maven { url = uri("https://maven.pkg.jetbrains.space/public/p/compose/dev") }
 }
 
 dependencies {
-    implementation(compose.desktop.currentOs)
+    compileOnly(compose.desktop.currentOs)
+    implementation(compose.desktop.linux_x64)
     implementation(compose.desktop.linux_arm64)
     implementation(compose.desktop.macos_arm64)
     implementation(compose.desktop.macos_x64)
