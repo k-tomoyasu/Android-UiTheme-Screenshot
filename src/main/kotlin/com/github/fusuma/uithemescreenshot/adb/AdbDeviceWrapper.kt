@@ -40,13 +40,13 @@ class AdbWrapperImpl(
         return if (isTakeBothTheme) {
             takeScreenshots(scale, currentUiTheme)
         } else {
-            takeScreenshot(scale, currentUiTheme, null)
+            takeScreenshot(scale, currentUiTheme, false)
         }
     }
 
     override suspend fun changeUiTheme(uiTheme: UiTheme, sleepTime: Long) {
         withContext(dispatcher) {
-            executeCmd(
+            runCmd(
                 Cmd(
                     "cmd uimode night ${uiTheme.nightYesNo}",
                     NullOutputReceiver()
@@ -62,14 +62,13 @@ class AdbWrapperImpl(
         currentUiTheme: UiTheme,
     ): Flow<ScreenshotResult> {
         val targetOrder = currentUiTheme to currentUiTheme.toggle()
-
         return flowOf(
-            takeScreenshot(scale, targetOrder.first, targetOrder.second),
-            takeScreenshot(scale, targetOrder.second, null),
+            takeScreenshot(scale, targetOrder.first, true),
+            takeScreenshot(scale, targetOrder.second, false),
         ).flattenConcat()
     }
 
-    private fun takeScreenshot(scale: Float, theme: UiTheme, nextTargetTheme: UiTheme?) : Flow<ScreenshotResult> = flow {
+    private fun takeScreenshot(scale: Float, theme: UiTheme, hasNextTarget: Boolean) : Flow<ScreenshotResult> = flow {
         if (device == null) {
             _errorFlow.emit(AdbError.NOT_FOUND)
             return@flow
@@ -83,7 +82,7 @@ class AdbWrapperImpl(
                 ScreenshotResult(
                     theme,
                     resizeImage(screenshot, scale).toComposeImageBitmap(),
-                    nextTargetTheme
+                    hasNextTarget
                 )
             )
         } catch (e: TimeoutException) {
@@ -96,7 +95,7 @@ class AdbWrapperImpl(
    override suspend fun getCurrentUiTheme() : UiTheme {
         return withContext(dispatcher) {
             val receiver = UIThemeDetectReceiver()
-            executeCmd(
+            runCmd(
                 Cmd(
                     "cmd uimode night",
                     receiver,
@@ -106,7 +105,7 @@ class AdbWrapperImpl(
         }
     }
 
-    private suspend fun executeCmd(cmd: Cmd) {
+    private suspend fun runCmd(cmd: Cmd) {
         if (device == null) {
             _errorFlow.tryEmit(AdbError.NOT_FOUND)
             return

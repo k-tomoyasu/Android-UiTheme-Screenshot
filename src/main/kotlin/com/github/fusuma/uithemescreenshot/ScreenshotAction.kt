@@ -17,11 +17,9 @@ class ScreenshotAction : DumbAwareAction() {
     }
 
     class ScreenshotDialog(private val project: Project) : DialogWrapper(project, false, IdeModalityType.MODELESS) {
-        private val bridge get() = requireNotNull(AndroidSdkUtils.getDebugBridge(project))
+        private val bridge = requireNotNull(AndroidSdkUtils.getDebugBridge(project))
 
         private val statusBar = WindowManager.getInstance().getStatusBar(project)
-
-        private var screenshotTime = ""
 
         override fun createActions() = arrayOf(cancelAction)
 
@@ -34,7 +32,7 @@ class ScreenshotAction : DumbAwareAction() {
             return ComposePanel().apply {
                 setBounds(0, 0, 800, 800)
                 setContent {
-                    ScreenshotPanel(
+                    ScreenshotView(
                         project,
                         statusBar,
                         ::getDevice,

@@ -25,7 +25,7 @@ import java.time.format.DateTimeFormatter
 private const val sleepTime = 3000L
 
 @Composable
-fun ScreenshotPanel(
+fun ScreenshotView(
     project: Project,
     statusBar: StatusBar,
     getDevice: (Int) -> IDevice?,
@@ -35,32 +35,10 @@ fun ScreenshotPanel(
     val state = remember { mutableStateOf(ScreenState()) }
     val deviceWrapper = remember(state.value.selectedIndex, state.value.deviceNameList) {
         val device = getDevice(state.value.selectedIndex)
-        if (device == null) {
-            state.value = state.value.copy(
-                deviceNotFoundError = true
-            )
-        }
-        AdbWrapperImpl(device)
-    }
-
-    LaunchedEffect(Unit) {
         state.value = state.value.copy(
-            deviceNameList = getConnectedDeviceNames()
+            deviceNotFoundError = device == null
         )
-    }
-    LaunchedEffect(Unit) {
-        deviceWrapper.errorFlow.collect {
-            when (it) {
-                AdbError.TIMEOUT -> {
-                    ApplicationManager.getApplication().invokeLater {
-                        statusBar.info = "ADB timeout."
-                    }
-                }
-                AdbError.NOT_FOUND -> state.value = state.value.copy(
-                    deviceNotFoundError = false
-                )
-            }
-        }
+        AdbWrapperImpl(device)
     }
 
     ScreenshotTheme {
@@ -107,14 +85,32 @@ fun ScreenshotPanel(
         )
     }
 
-    state.value.onRefreshDevice?.let {
-        LaunchedEffect(Unit) {
-            state.value = state.value.copy(
-                deviceNameList = getConnectedDeviceNames(),
-                deviceNotFoundError = false,
-                onRefreshDevice = null
-            )
+    LaunchedEffect(Unit) {
+        state.value = state.value.copy(
+            deviceNameList = getConnectedDeviceNames()
+        )
+    }
+    LaunchedEffect(Unit) {
+        deviceWrapper.errorFlow.collect {
+            when (it) {
+                AdbError.TIMEOUT -> {
+                    ApplicationManager.getApplication().invokeLater {
+                        statusBar.info = "ADB timeout."
+                    }
+                }
+                AdbError.NOT_FOUND -> state.value = state.value.copy(
+                    deviceNotFoundError = false
+                )
+            }
         }
+    }
+
+    state.value.onRefreshDevice?.let {
+        state.value = state.value.copy(
+            deviceNameList = getConnectedDeviceNames(),
+            deviceNotFoundError = false,
+            onRefreshDevice = null
+        )
     }
 
     state.value.onToggleTheme?.let {
@@ -137,11 +133,11 @@ fun ScreenshotPanel(
             state.value = state.value.copy(
                 deviceNotFoundError = false,
             )
-            val currentUiTheme = deviceWrapper.getCurrentUiTheme()
+            val initialTheme = deviceWrapper.getCurrentUiTheme()
             val screenshotFlow = deviceWrapper.screenshotFlow(
                 state.value.resizeScale,
                 state.value.isTakeBothTheme,
-                currentUiTheme
+                initialTheme
             )
             screenshotFlow.onStart {
                 val refreshState = if (state.value.isTakeBothTheme) {
@@ -151,7 +147,7 @@ fun ScreenshotPanel(
                         processingScreenshotTarget = ScreenshotTarget.BOTH
                     )
                 } else {
-                    when (currentUiTheme) {
+                    when (initialTheme) {
                         UiTheme.LIGHT -> state.value.copy(
                             lightScreenshot = null,
                             processingScreenshotTarget = ScreenshotTarget.LIGHT
@@ -172,18 +168,19 @@ fun ScreenshotPanel(
                         darkScreenshot = screenshot.image
                     )
                 }
-                if (state.value.processingScreenshotTarget == ScreenshotTarget.BOTH) {
-                    screenshot.nextTargetTheme?.let {  nextTheme ->
-                        deviceWrapper.changeUiTheme(
-                            uiTheme = nextTheme,
-                            sleepTime = sleepTime
-                        )
-                    }
+                if (
+                    state.value.processingScreenshotTarget == ScreenshotTarget.BOTH &&
+                    screenshot.hasNextTarget
+                ) {
+                    deviceWrapper.changeUiTheme(
+                        uiTheme = screenshot.theme.toggle(),
+                        sleepTime = sleepTime
+                    )
                 }
             }.onCompletion { throwable ->
                 if (state.value.processingScreenshotTarget == ScreenshotTarget.BOTH) {
                     deviceWrapper.changeUiTheme(
-                        uiTheme = currentUiTheme,
+                        uiTheme = initialTheme,
                         sleepTime = 0
                     )
                 }
@@ -192,12 +189,15 @@ fun ScreenshotPanel(
                     onScreenshot = null,
                     processingScreenshotTarget = null
                 )
-                val datetime = LocalDateTime.now().let { datetime ->
-                    val pattern = DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
-                    pattern.format(datetime)
-                }
-                screenshotTime.value = datetime
+                screenshotTime.value = getTimeString()
             }.launchIn(this)
         }
+    }
+}
+
+private fun getTimeString(): String {
+    return LocalDateTime.now().let { datetime ->
+        val pattern = DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
+        pattern.format(datetime)
     }
 }
