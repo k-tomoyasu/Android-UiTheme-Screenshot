@@ -12,8 +12,9 @@ import kotlinx.coroutines.withContext
 import java.awt.image.BufferedImage
 import java.io.File
 import java.nio.file.Path
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import javax.imageio.ImageIO
-
 
 suspend fun resizeImage(image: BufferedImage, scale: Float): BufferedImage {
     if (scale == 0f) return image
@@ -31,10 +32,10 @@ suspend fun resizeImage(image: BufferedImage, scale: Float): BufferedImage {
     }
 }
 
-fun saveImage(image: BufferedImage, UiTheme: UiTheme, screenshotTime: String, project: Project) {
+fun saveImage(image: BufferedImage, uiTheme: UiTheme, screenshotTime: LocalDateTime, project: Project) {
     val descriptor = FileSaverDescriptor("Save Screenshot", "", EXT_PNG)
     val saveFileDialog = FileChooserFactory.getInstance().createSaveFileDialog(descriptor, project)
-    val fileName = "screenshot_${screenshotTime}_${UiTheme.name.lowercase()}.png"
+    val fileName = "screenshot_${getTimeString(screenshotTime)}_${uiTheme.name.lowercase()}.png"
     val fileWrapper = saveFileDialog.save(
         Path.of(System.getProperty("user.home") + File.separator + "Desktop"),
         fileName
@@ -47,4 +48,9 @@ fun saveImage(image: BufferedImage, UiTheme: UiTheme, screenshotTime: String, pr
         Messages.showErrorDialog(project, "Save failed.", "Save Screenshot")
         e.printStackTrace()
     }
+}
+
+private fun getTimeString(datetime: LocalDateTime): String {
+    val pattern = DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
+    return pattern.format(datetime)
 }

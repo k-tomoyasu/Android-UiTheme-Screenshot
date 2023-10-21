@@ -11,9 +11,9 @@ data class ScreenState(
     val lightScreenshot: ImageBitmap? = null,
     val darkScreenshot: ImageBitmap? = null,
     val onRefreshDevice: Unit? = null,
-    val onScreenshot: Unit? = null,
     val processingScreenshotTarget: ScreenshotTarget? = null,
     val onToggleTheme: Unit? = null,
+    val onScreenshot: Unit? = null,
     val deviceNotFoundError: Boolean = false,
 ) {
     private val isScreenshotProcessing = onScreenshot != null
