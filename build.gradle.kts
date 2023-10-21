@@ -9,6 +9,8 @@ version = "1.1.0"
 
 repositories {
     mavenCentral()
+    maven("https://maven.pkg.jetbrains.space/public/p/compose/dev")
+    google()
 }
 
 dependencies {
@@ -19,6 +21,9 @@ dependencies {
     implementation(compose.desktop.macos_x64)
     implementation(compose.desktop.windows_x64)
     implementation(compose.desktop.common)
+
+    testImplementation(kotlin("test"))
+    testImplementation(compose.desktop.uiTestJUnit4)
 }
 
 // Configure Gradle IntelliJ Plugin
