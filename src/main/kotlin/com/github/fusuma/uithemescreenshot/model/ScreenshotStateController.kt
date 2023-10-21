@@ -24,7 +24,7 @@ fun useScreenshotScreenState(
     var screenshotTime by remember { mutableStateOf<LocalDateTime?>(null) }
     val deviceWrapper = remember(state.selectedIndex, state.deviceNameList) {
         val deviceWrapper = getDevice(state.selectedIndex)
-        state = state.copy(deviceNotFoundError = !deviceWrapper.hasDevice)
+        state = state.copy(deviceNotFoundError = !deviceWrapper.hasDevice && state.deviceNameList.isNotEmpty())
         deviceWrapper
     }
     val scope = rememberCoroutineScope()
