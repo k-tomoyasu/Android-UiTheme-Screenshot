@@ -2,11 +2,15 @@ package com.github.fusuma.uithemescreenshot
 
 import androidx.compose.ui.awt.ComposePanel
 import com.github.fusuma.uithemescreenshot.adb.AdbDeviceWrapperImpl
+import com.github.fusuma.uithemescreenshot.image.saveImage
+import com.github.fusuma.uithemescreenshot.model.UiTheme
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
 import org.jetbrains.android.sdk.AndroidSdkUtils
+import java.awt.image.BufferedImage
+import java.time.LocalDateTime
 import javax.swing.JComponent
 
 class ScreenshotAction : DumbAwareAction() {
@@ -31,17 +35,19 @@ class ScreenshotAction : DumbAwareAction() {
                 setBounds(0, 0, 800, 800)
                 setContent {
                     ScreenshotPanel(
-                        project,
-                        ::getDevice,
-                        ::getConnectedDeviceNames,
+                        saveImage = { image: BufferedImage, theme: UiTheme, datetime: LocalDateTime ->
+                            saveImage(image, theme, datetime, project)
+                        },
+                        getDevice = { index ->
+                            AdbDeviceWrapperImpl(bridge.devices.getOrNull(index))
+                        },
+                        getConnectedDeviceNames = {
+                            bridge.devices.map { it.name }
+                        }
                     )
                 }
             }
         }
-
-        private fun getDevice(index: Int) = AdbDeviceWrapperImpl(bridge.devices.getOrNull(index))
-
-        private fun getConnectedDeviceNames() = bridge.devices.map { it.name }
     }
 }
 

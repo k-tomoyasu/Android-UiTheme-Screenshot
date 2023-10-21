@@ -13,13 +13,14 @@ import java.time.LocalDateTime
 private const val sleepTime = 3000L
 
 @Composable
-fun useScreenshotState(
+fun useScreenshotScreenState(
+    initialState: ScreenState = ScreenState(),
     getConnectedDeviceNames: () -> List<String>,
     getDevice: (Int) -> AdbDeviceWrapper,
     getLocalDateTime: () -> LocalDateTime,
     saveImage: (BufferedImage, UiTheme, LocalDateTime) -> Unit
-): ScreenStateController {
-    var state by remember { mutableStateOf(ScreenState()) }
+): ScreenshotStateController {
+    var state by remember { mutableStateOf(initialState) }
     var screenshotTime by remember { mutableStateOf<LocalDateTime?>(null) }
     val deviceWrapper = remember(state.selectedIndex, state.deviceNameList) {
         val deviceWrapper = getDevice(state.selectedIndex)
@@ -148,7 +149,7 @@ fun useScreenshotState(
         }
     }
 
-    return ScreenStateController(
+    return ScreenshotStateController(
         state = state,
         onRefreshDeviceList = ::onRefreshDeviceList,
         onSelectDevice = ::onSelectDevice,
@@ -160,7 +161,7 @@ fun useScreenshotState(
     )
 }
 
-data class ScreenStateController(
+data class ScreenshotStateController(
     val state: ScreenState,
     val onRefreshDeviceList: () -> Unit,
     val onSelectDevice: (Int) -> Unit,
