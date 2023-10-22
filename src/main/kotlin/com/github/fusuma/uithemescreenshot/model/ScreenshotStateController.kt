@@ -4,6 +4,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.toAwtImage
 import com.github.fusuma.uithemescreenshot.adb.AdbDeviceWrapper
+import com.github.fusuma.uithemescreenshot.adb.AdbError
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.awt.image.BufferedImage
@@ -26,12 +27,24 @@ fun useScreenshotScreenState(
         state = state.copy(deviceNotFoundError = !deviceWrapper.hasDevice && state.deviceNameList.isNotEmpty())
         deviceWrapper
     }
+    val adbError = deviceWrapper.errorFlow.collectAsState(null).value
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         state = state.copy(
             deviceNameList = getConnectedDeviceNames()
         )
+    }
+
+    adbError?.let { error ->
+        when (error) {
+            AdbError.TIMEOUT -> {
+                //TODO
+            }
+            AdbError.NOT_FOUND -> {
+                state = state.copy(deviceNotFoundError = true)
+            }
+        }
     }
 
     fun onRefreshDeviceList() {
@@ -54,13 +67,11 @@ fun useScreenshotScreenState(
     }
 
     fun onSave(bitmap: ImageBitmap, theme: UiTheme) {
-        screenshotTime?.let {
-            saveImage(
-                bitmap.toAwtImage(),
-                theme,
-                it,
-            )
-        }
+        saveImage(
+            bitmap.toAwtImage(),
+            theme,
+            requireNotNull(screenshotTime) { "screenshotTime must not be null if it can save image." }
+        )
     }
 
     fun onCheckTakeBothTheme(checked: Boolean) {

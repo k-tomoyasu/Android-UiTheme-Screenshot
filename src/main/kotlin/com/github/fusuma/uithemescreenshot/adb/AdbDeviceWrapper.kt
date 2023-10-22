@@ -13,7 +13,6 @@ import com.github.fusuma.uithemescreenshot.receiver.UIThemeDetectReceiver
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import java.util.concurrent.TimeUnit
-import kotlin.coroutines.CoroutineContext
 
 interface AdbDeviceWrapper {
     val errorFlow: Flow<AdbError>
@@ -111,7 +110,7 @@ class AdbDeviceWrapperImpl(
 
     private suspend fun runCmd(cmd: Cmd) {
         if (device == null) {
-            _errorFlow.tryEmit(AdbError.NOT_FOUND)
+            _errorFlow.emit(AdbError.NOT_FOUND)
             return
         }
         try {
