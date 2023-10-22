@@ -3,7 +3,6 @@ package com.github.fusuma.uithemescreenshot.model
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.toAwtImage
-import com.android.ddmlib.AdbCommandRejectedException
 import com.github.fusuma.uithemescreenshot.adb.AdbDeviceWrapper
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -39,7 +38,6 @@ fun useScreenshotScreenState(
         state = state.copy(
             deviceNameList = getConnectedDeviceNames(),
             deviceNotFoundError = false,
-            onRefreshDevice = null
         )
     }
 
@@ -87,37 +85,35 @@ fun useScreenshotScreenState(
     }
 
     fun onTakeScreenshot() {
-        state = state.copy(
-            onScreenshot = Unit
-        )
         scope.launch {
             val initialTheme = deviceWrapper.getCurrentUiTheme()
+            val refreshState = if (state.isTakeBothTheme) {
+                state.copy(
+                    lightScreenshot = null,
+                    darkScreenshot = null,
+                    onScreenshot = ScreenshotTarget.BOTH
+                )
+            } else {
+                when (initialTheme) {
+                    UiTheme.LIGHT -> state.copy(
+                        lightScreenshot = null,
+                        onScreenshot = ScreenshotTarget.LIGHT
+                    )
+                    UiTheme.DARK -> state.copy(
+                        darkScreenshot = null,
+                        onScreenshot = ScreenshotTarget.DARK
+                    )
+                }
+            }
+            state = refreshState
+            screenshotTime = getLocalDateTime()
+
             val screenshotFlow = deviceWrapper.screenshotFlow(
                 state.resizeScale,
                 state.isTakeBothTheme,
                 initialTheme
             )
-            screenshotFlow.onStart {
-                val refreshState = if (state.isTakeBothTheme) {
-                    state.copy(
-                        lightScreenshot = null,
-                        darkScreenshot = null,
-                        processingScreenshotTarget = ScreenshotTarget.BOTH
-                    )
-                } else {
-                    when (initialTheme) {
-                        UiTheme.LIGHT -> state.copy(
-                            lightScreenshot = null,
-                            processingScreenshotTarget = ScreenshotTarget.LIGHT
-                        )
-                        UiTheme.DARK -> state.copy(
-                            darkScreenshot = null,
-                            processingScreenshotTarget = ScreenshotTarget.DARK
-                        )
-                    }
-                }
-                state = refreshState
-            }.onEach { screenshot ->
+            screenshotFlow.onEach { screenshot ->
                 state = when (screenshot.theme) {
                     UiTheme.LIGHT -> state.copy(
                         lightScreenshot = screenshot.image
@@ -132,19 +128,16 @@ fun useScreenshotScreenState(
                         sleepTime = sleepTime
                     )
                 }
-            }.onCompletion { throwable ->
-                if (state.processingScreenshotTarget == ScreenshotTarget.BOTH) {
+            }.onCompletion {
+                if (state.onScreenshot == ScreenshotTarget.BOTH) {
                     deviceWrapper.changeUiTheme(
                         uiTheme = initialTheme,
                         sleepTime = 0
                     )
                 }
                 state = state.copy(
-                    deviceNotFoundError = throwable is AdbCommandRejectedException,
                     onScreenshot = null,
-                    processingScreenshotTarget = null
                 )
-                screenshotTime = getLocalDateTime()
             }.launchIn(this)
         }
     }

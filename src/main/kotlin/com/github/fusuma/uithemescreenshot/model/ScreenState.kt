@@ -10,15 +10,13 @@ data class ScreenState(
     val isTakeBothTheme: Boolean = true,
     val lightScreenshot: ImageBitmap? = null,
     val darkScreenshot: ImageBitmap? = null,
-    val onRefreshDevice: Unit? = null,
-    val processingScreenshotTarget: ScreenshotTarget? = null,
     val onToggleTheme: Unit? = null,
-    val onScreenshot: Unit? = null,
+    val onScreenshot: ScreenshotTarget? = null,
     val deviceNotFoundError: Boolean = false,
 ) {
     private val isScreenshotProcessing = onScreenshot != null
-    val isLightScreenshotProcessing = isScreenshotProcessing && processingScreenshotTarget.isTarget(ScreenshotTarget.LIGHT)
-    val isDarkScreenshotProcessing = isScreenshotProcessing && processingScreenshotTarget.isTarget(ScreenshotTarget.DARK)
+    val isLightScreenshotProcessing = onScreenshot.isTarget(ScreenshotTarget.LIGHT)
+    val isDarkScreenshotProcessing = onScreenshot.isTarget(ScreenshotTarget.DARK)
     private val isToggleThemeProcessing = onToggleTheme != null
     private val isInvalidResizeScale = resizeScale <= 0f
     private val deviceExists = deviceNameList.isNotEmpty()
