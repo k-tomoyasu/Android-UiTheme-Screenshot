@@ -27,7 +27,6 @@ fun useScreenshotScreenState(
         state = state.copy(deviceNotFoundError = !deviceWrapper.hasDevice && state.deviceNameList.isNotEmpty())
         deviceWrapper
     }
-    val adbError = deviceWrapper.errorFlow.collectAsState(null).value
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
@@ -36,13 +35,15 @@ fun useScreenshotScreenState(
         )
     }
 
-    adbError?.let { error ->
-        when (error) {
-            AdbError.TIMEOUT -> {
-                //TODO
-            }
-            AdbError.NOT_FOUND -> {
-                state = state.copy(deviceNotFoundError = true)
+    LaunchedEffect(deviceWrapper) {
+        deviceWrapper.errorFlow.collect {
+            when (it) {
+                AdbError.TIMEOUT -> {
+                    //TODO
+                }
+                AdbError.NOT_FOUND -> {
+                    state = state.copy(deviceNotFoundError = true)
+                }
             }
         }
     }
