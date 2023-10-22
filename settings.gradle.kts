@@ -5,4 +5,4 @@ pluginManagement {
     }
 }
 
-rootProject.name = "AndroidUiModeScreenshot"
+rootProject.name = "AndroidUiThemeScreenshot"

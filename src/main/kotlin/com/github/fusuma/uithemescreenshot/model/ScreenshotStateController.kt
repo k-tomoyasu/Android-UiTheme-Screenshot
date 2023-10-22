@@ -153,16 +153,18 @@ fun useScreenshotScreenState(
         }
     }
 
-    return ScreenshotStateController(
-        state = state,
-        onRefreshDeviceList = ::onRefreshDeviceList,
-        onSelectDevice = ::onSelectDevice,
-        onResizeScaleChange = ::onResizeScaleChange,
-        onSave = ::onSave,
-        onCheckTakeBothTheme = ::onCheckTakeBothTheme,
-        onToggleTheme = ::onToggleTheme,
-        onTakeScreenshot = ::onTakeScreenshot,
-    )
+    return remember(state) {
+        ScreenshotStateController(
+            state = state,
+            onRefreshDeviceList = ::onRefreshDeviceList,
+            onSelectDevice = ::onSelectDevice,
+            onResizeScaleChange = ::onResizeScaleChange,
+            onSave = ::onSave,
+            onCheckTakeBothTheme = ::onCheckTakeBothTheme,
+            onToggleTheme = ::onToggleTheme,
+            onTakeScreenshot = ::onTakeScreenshot,
+        )
+    }
 }
 
 data class ScreenshotStateController(
