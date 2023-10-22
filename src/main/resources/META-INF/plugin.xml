@@ -41,8 +41,8 @@ Easily capture screenshots from your connected Android device using adb. You can
     <actions>
         <!-- Add your actions here -->
         <action
-                id="com.github.fusuma.ScreenshotAction"
-                class="com.github.fusuma.uithemescreenshot.ScreenshotAction"
+                id="io.github.fusuma.uithemescreenshot"
+                class="io.github.fusuma.uithemescreenshot.ScreenshotAction"
                 text="UiTheme Screenshot"
                 icon="StudioIcons.Emulator.Toolbar.SCREENSHOT"
         >

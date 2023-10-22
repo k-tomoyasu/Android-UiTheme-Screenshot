@@ -4,7 +4,7 @@ plugins {
     id("org.jetbrains.compose") version "1.5.3"
 }
 
-group = "com.github.fusuma"
+group = "io.github.fusuma"
 version = "1.1.1"
 
 repositories {
