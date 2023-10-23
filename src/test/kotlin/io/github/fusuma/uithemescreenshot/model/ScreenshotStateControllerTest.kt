@@ -149,6 +149,10 @@ class ScreenshotStateControllerTest {
         assertEquals(startScreenshotScate, history[1])
         assertEquals(lightScreenshotDoneState, history[2])
         assertEquals(screenshotDoneState, history[3])
+        assertEquals(
+            4,
+            history.count()
+        )
 
         assertEquals(
             1,
@@ -253,6 +257,10 @@ class ScreenshotStateControllerTest {
         assertEquals(lightScreenshotDoneState, history[2])
         assertEquals(darkScreenshotDoneState, history[3])
         assertEquals(screenshotDoneState, history[4])
+        assertEquals(
+            5,
+            history.count()
+        )
 
         assertEquals(
             1,
