@@ -13,6 +13,8 @@ import io.github.fusuma.uithemescreenshot.receiver.UIThemeDetectReceiver
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration
+import kotlin.time.ExperimentalTime
 
 interface AdbDeviceWrapper {
     val errorFlow: Flow<AdbError>
@@ -22,7 +24,7 @@ interface AdbDeviceWrapper {
         currentUiTheme: UiTheme
     ) : Flow<ScreenshotResult>
     val hasDevice: Boolean
-    suspend fun changeUiTheme(uiTheme: UiTheme, sleepTime: Long)
+    suspend fun changeUiTheme(uiTheme: UiTheme, sleepTime: Duration)
     suspend fun getCurrentUiTheme() : UiTheme
 }
 
@@ -30,6 +32,7 @@ enum class AdbError {
     TIMEOUT, NOT_FOUND
 }
 
+@OptIn(ExperimentalTime::class)
 class AdbDeviceWrapperImpl(
     private val device: IDevice?,
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO
@@ -47,7 +50,7 @@ class AdbDeviceWrapperImpl(
         }
     }
 
-    override suspend fun changeUiTheme(uiTheme: UiTheme, sleepTime: Long) {
+    override suspend fun changeUiTheme(uiTheme: UiTheme, sleepTime: Duration) {
         withContext(dispatcher) {
             runCmd(
                 Cmd(

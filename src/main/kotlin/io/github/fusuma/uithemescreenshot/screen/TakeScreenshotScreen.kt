@@ -68,8 +68,8 @@ fun ScreenshotScreen(
             ScreenshotContainerRow(
                 isLightScreenShotProcessing = state.isLightScreenshotProcessing,
                 isDarkScreenShotProcessing = state.isDarkScreenshotProcessing,
-                lightScreenShot = state.lightScreenshot,
-                darkScreenShot = state.darkScreenshot,
+                lightScreenShot = state.screenshotState.lightScreenshot,
+                darkScreenShot = state.screenshotState.darkScreenshot,
                 onSave = onSave
             )
         }

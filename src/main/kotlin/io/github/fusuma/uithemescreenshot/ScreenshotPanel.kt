@@ -3,7 +3,7 @@ package io.github.fusuma.uithemescreenshot
 import androidx.compose.runtime.Composable
 import io.github.fusuma.uithemescreenshot.adb.AdbDeviceWrapper
 import io.github.fusuma.uithemescreenshot.model.UiTheme
-import io.github.fusuma.uithemescreenshot.model.useScreenshotScreenState
+import io.github.fusuma.uithemescreenshot.model.useScreenState
 import io.github.fusuma.uithemescreenshot.screen.ScreenshotScreen
 import io.github.fusuma.uithemescreenshot.theme.ScreenshotTheme
 import java.awt.image.BufferedImage
@@ -15,7 +15,7 @@ fun ScreenshotPanel(
     getDevice: (Int) -> AdbDeviceWrapper,
     getConnectedDeviceNames: () -> List<String>
 ) {
-    val stateController = useScreenshotScreenState(
+    val stateController = useScreenState(
         getConnectedDeviceNames = getConnectedDeviceNames,
         getDevice  = getDevice,
         saveImage = saveImage,

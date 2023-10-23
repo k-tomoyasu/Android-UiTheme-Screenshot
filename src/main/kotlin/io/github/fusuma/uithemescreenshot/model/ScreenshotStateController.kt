@@ -4,68 +4,24 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.toAwtImage
 import io.github.fusuma.uithemescreenshot.adb.AdbDeviceWrapper
-import io.github.fusuma.uithemescreenshot.adb.AdbError
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.awt.image.BufferedImage
 import java.time.LocalDateTime
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
-private const val sleepTime = 3000L
+private val sleepTime = 3.seconds
 
 @Composable
-fun useScreenshotScreenState(
-    initialState: ScreenState = ScreenState(),
-    getConnectedDeviceNames: () -> List<String>,
-    getDevice: (Int) -> AdbDeviceWrapper,
+fun useScreenshotState(
+    initialState: ScreenshotState = ScreenshotState(),
     getLocalDateTime: () -> LocalDateTime,
     saveImage: (BufferedImage, UiTheme, LocalDateTime) -> Unit
 ): ScreenshotStateController {
     var state by remember { mutableStateOf(initialState) }
     var screenshotTime by remember { mutableStateOf<LocalDateTime?>(null) }
-    val deviceWrapper = remember(state.selectedIndex, state.deviceNameList) {
-        val deviceWrapper = getDevice(state.selectedIndex)
-        state = state.copy(deviceNotFoundError = !deviceWrapper.hasDevice && state.deviceNameList.isNotEmpty())
-        deviceWrapper
-    }
     val scope = rememberCoroutineScope()
-
-    LaunchedEffect(Unit) {
-        state = state.copy(
-            deviceNameList = getConnectedDeviceNames()
-        )
-    }
-
-    LaunchedEffect(deviceWrapper) {
-        deviceWrapper.errorFlow.collect {
-            when (it) {
-                AdbError.TIMEOUT -> {
-                    //TODO
-                }
-                AdbError.NOT_FOUND -> {
-                    state = state.copy(deviceNotFoundError = true)
-                }
-            }
-        }
-    }
-
-    fun onRefreshDeviceList() {
-        state = state.copy(
-            deviceNameList = getConnectedDeviceNames(),
-            deviceNotFoundError = false,
-        )
-    }
-
-    fun onSelectDevice(index: Int) {
-        state = state.copy(
-            selectedIndex = index
-        )
-    }
-
-    fun onResizeScaleChange(scale: Float) {
-        state = state.copy(
-            resizeScale = scale,
-        )
-    }
 
     fun onSave(bitmap: ImageBitmap, theme: UiTheme) {
         saveImage(
@@ -75,31 +31,10 @@ fun useScreenshotScreenState(
         )
     }
 
-    fun onCheckTakeBothTheme(checked: Boolean) {
-        state = state.copy(
-            isTakeBothTheme = checked
-        )
-    }
-
-    fun onToggleTheme() {
-        state = state.copy(
-            onToggleTheme = Unit,
-        )
-        scope.launch {
-            deviceWrapper.changeUiTheme(
-                deviceWrapper.getCurrentUiTheme().toggle(),
-                0
-            )
-            state = state.copy(
-                onToggleTheme = null
-            )
-        }
-    }
-
-    fun onTakeScreenshot() {
+    fun onTakeScreenshot(deviceWrapper: AdbDeviceWrapper, isTakeBothTheme: Boolean, resizeScale: Float) {
         scope.launch {
             val initialTheme = deviceWrapper.getCurrentUiTheme()
-            val refreshState = if (state.isTakeBothTheme) {
+            val refreshState = if (isTakeBothTheme) {
                 state.copy(
                     lightScreenshot = null,
                     darkScreenshot = null,
@@ -121,8 +56,8 @@ fun useScreenshotScreenState(
             screenshotTime = getLocalDateTime()
 
             val screenshotFlow = deviceWrapper.screenshotFlow(
-                state.resizeScale,
-                state.isTakeBothTheme,
+                resizeScale,
+                isTakeBothTheme,
                 initialTheme
             )
             screenshotFlow.onEach { screenshot ->
@@ -144,7 +79,7 @@ fun useScreenshotScreenState(
                 if (state.onScreenshot == ScreenshotTarget.BOTH) {
                     deviceWrapper.changeUiTheme(
                         uiTheme = initialTheme,
-                        sleepTime = 0
+                        sleepTime = Duration.ZERO
                     )
                 }
                 state = state.copy(
@@ -157,24 +92,14 @@ fun useScreenshotScreenState(
     return remember(state) {
         ScreenshotStateController(
             state = state,
-            onRefreshDeviceList = ::onRefreshDeviceList,
-            onSelectDevice = ::onSelectDevice,
-            onResizeScaleChange = ::onResizeScaleChange,
-            onSave = ::onSave,
-            onCheckTakeBothTheme = ::onCheckTakeBothTheme,
-            onToggleTheme = ::onToggleTheme,
             onTakeScreenshot = ::onTakeScreenshot,
+            onSave = ::onSave
         )
     }
 }
 
 data class ScreenshotStateController(
-    val state: ScreenState,
-    val onRefreshDeviceList: () -> Unit,
-    val onSelectDevice: (Int) -> Unit,
-    val onResizeScaleChange: (Float) -> Unit,
-    val onSave: (ImageBitmap, UiTheme) -> Unit,
-    val onCheckTakeBothTheme: (Boolean) -> Unit,
-    val onToggleTheme: () -> Unit,
-    val onTakeScreenshot: () -> Unit,
+    val state: ScreenshotState,
+    val onTakeScreenshot: (deviceWrapper: AdbDeviceWrapper, isTakeBothTheme: Boolean, resizeScale: Float) -> Unit,
+    val onSave: (image: ImageBitmap, theme: UiTheme) -> Unit,
 )

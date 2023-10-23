@@ -12,14 +12,14 @@ import java.awt.image.BufferedImage
 import java.time.LocalDateTime
 import kotlin.test.assertEquals
 
-class ScreenshotStateControllerTest {
+class ScreenStateControllerTest {
     @get:Rule
     val rule = createComposeRule()
 
     @Test
     fun `get deviceNameList on launch`() {
         // setup
-        lateinit var stateController: ScreenshotStateController
+        lateinit var stateController: ScreenStateController
 
         val expected = listOf("emulator1", "emulator2")
 
@@ -39,7 +39,7 @@ class ScreenshotStateControllerTest {
     @Test
     fun `toggle theme`() {
         // setup
-        lateinit var stateController: ScreenshotStateController
+        lateinit var stateController: ScreenStateController
 
         val history = mutableListOf<Unit?>()
         val mockDeviceWrapper = object : MockDeviceWrapper {
@@ -76,7 +76,7 @@ class ScreenshotStateControllerTest {
 
     @Test
     fun `screenshot one theme`() {
-        lateinit var stateController: ScreenshotStateController
+        lateinit var stateController: ScreenStateController
 
         // setup
         val initialTheme = UiTheme.LIGHT
@@ -166,7 +166,7 @@ class ScreenshotStateControllerTest {
 
     @Test
     fun `screenshot both theme`() {
-        lateinit var stateController: ScreenshotStateController
+        lateinit var stateController: ScreenStateController
 
         // setup
         val initialTheme = UiTheme.LIGHT
@@ -276,7 +276,7 @@ private fun prepareState(
     getDevice: (Int) -> AdbDeviceWrapper = { _ -> object : MockDeviceWrapper {} },
     getLocalDateTime: () -> LocalDateTime = { LocalDateTime.now() },
     saveImage: (BufferedImage, UiTheme, LocalDateTime) -> Unit = { _: BufferedImage, _: UiTheme, _: LocalDateTime -> }
-) = useScreenshotScreenState(
+) = useScreenState(
     initialState = initialState,
     getConnectedDeviceNames = getConnectedDeviceNames,
     getDevice = getDevice,
