@@ -50,27 +50,3 @@ class ScreenshotAction : DumbAwareAction() {
         }
     }
 }
-
-// https://giVthub.com/JetBrains/compose-multiplatform/tree/v1.5.3/examples/intellij-plugin
-class ComposeDemoAction : DumbAwareAction() {
-    override fun actionPerformed(e: AnActionEvent) {
-        DemoDialog(e.project).show()
-    }
-
-    class DemoDialog(project: Project?) : DialogWrapper(project) {
-        init {
-            title = "Demo"
-            init()
-        }
-
-        override fun createCenterPanel(): JComponent {
-            return ComposePanel().apply {
-                setBounds(0, 0, 800, 600)
-                setContent {
-                    // パネルのコンテンツ部分を担うComposableを渡す。ここからComposeの世界
-                }
-            }
-        }
-    }
-}
-
